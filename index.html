@@ -185,17 +185,17 @@ button.link{border:0;background:none;color:var(--muted);font-weight:500;padding:
   function b64d(s){s=s.replace(/-/g,"+").replace(/_/g,"/");while(s.length%4)s+="=";return JSON.parse(decodeURIComponent(escape(atob(s))))}
   function idOf(n,u,c){var s=n+"|"+u+"|"+c,h=0;for(var k=0;k<s.length;k++){h=(h*31+s.charCodeAt(k))|0}return "i"+(h>>>0).toString(36)}
   function loadState(){
-    var m=/#d=([^&]+)/.exec(location.hash);
+    var m=/[?&]d=([^&#]+)/.exec(location.search)||/#d=([^&]+)/.exec(location.hash);
     if(m){try{var o=b64d(m[1]);return {updated:o.u,items:o.i.map(function(a){return {id:idOf(a[0],a[1],a[2]),name:a[0],upc:a[1],cost:a[2]}})}}catch(e){}}
     return {items:[{id:"example",name:"Example item (sample)",upc:"",cost:"5.00",example:true}],updated:today()};
   }
   function makeLink(items){
     var arr=items.map(function(i){return [i.name,i.upc||"",i.cost]});
-    return location.origin+location.pathname+"?v=3#d="+b64e({u:today(),i:arr});
+    return location.origin+location.pathname+"?v=3&d="+b64e({u:today(),i:arr});
   }
   function applyItems(items){
     var link=makeLink(items);
-    try{history.replaceState(null,"",link.slice(link.indexOf("#")))}catch(e){location.hash=link.slice(link.indexOf("#"))}
+    try{history.replaceState(null,"",link.slice(link.indexOf("?")))}catch(e){}
     STATE=loadState(); render(); return link;
   }
   function removeItem(id){
