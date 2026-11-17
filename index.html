@@ -3,12 +3,11 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>H&K Pricing Template</title>
-<meta name="robots" content="noindex">
+<title>H&amp;K Pricing Template</title>
 <meta name="description" content="Enter the Tier 1 to 4 prices for new items.">
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="H&K Distribution">
-<meta property="og:title" content="H&K Pricing Template">
+<meta property="og:site_name" content="H&amp;K Distribution">
+<meta property="og:title" content="H&amp;K Pricing Template">
 <meta property="og:description" content="Enter the Tier 1 to 4 prices for the new items and send them back.">
 <meta property="og:url" content="https://khofficer19-a11y.github.io/hk-pricing/">
 <meta property="og:image" content="https://khofficer19-a11y.github.io/hk-pricing/og.png">
@@ -192,7 +191,7 @@ button.link{border:0;background:none;color:var(--muted);font-weight:500;padding:
   }
   function makeLink(items){
     var arr=items.map(function(i){return [i.name,i.upc||"",i.cost]});
-    return location.origin+location.pathname+"#d="+b64e({u:today(),i:arr});
+    return location.origin+location.pathname+"?v=2#d="+b64e({u:today(),i:arr});
   }
   function applyItems(items){
     var link=makeLink(items);
