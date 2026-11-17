@@ -191,7 +191,7 @@ button.link{border:0;background:none;color:var(--muted);font-weight:500;padding:
   }
   function makeLink(items){
     var arr=items.map(function(i){return [i.name,i.upc||"",i.cost]});
-    return location.origin+location.pathname+"?v=2#d="+b64e({u:today(),i:arr});
+    return location.origin+location.pathname+"?v=3#d="+b64e({u:today(),i:arr});
   }
   function applyItems(items){
     var link=makeLink(items);
