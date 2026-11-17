@@ -113,7 +113,7 @@ button.link{border:0;background:none;color:var(--muted);font-weight:500;padding:
       h+='</div><div class="item-top"><span class="chip'+(n===4?' ok':'')+'" id="chip_'+esc(it.id)+'">'+(n===4?'All 4 prices entered':n+' of 4 prices entered')+'</span>'+
         (owner?'<button class="link" data-remove="'+esc(it.id)+'">Remove item</button>':'')+'</div></div>';
     });
-    if(items.length) h+='<div class="send"><button class="primary" id="send">Copy my prices to send</button><div class="status" id="status" role="status"></div><div class="hint">Tap the button, then paste the message into WhatsApp, a text or an email.</div></div>';
+    if(items.length) h+='<div class="send"><button class="primary" id="send">Copy my prices to send</button><div class="status" id="status" role="status"></div><div class="hint">Tap the button, then paste the message into WhatsApp, a text or an email.</div><button class="link" id="clearp">Clear my prices</button></div>';
     if(owner){
       h+='<div class="card admin"><h2>Add new items</h2><div class="hint">Type the item name and the cost. Then tap Copy link for the CEO and paste the link into WhatsApp.</div>';
       drafts.forEach(function(r,i){
@@ -151,6 +151,7 @@ button.link{border:0;background:none;color:var(--muted);font-weight:500;padding:
   root.addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
     if(b.id==="send") return copyPrices();
+    if(b.id==="clearp"){(STATE.items||[]).forEach(function(i){delete prices[i.id]});savePrices();render();return}
     if(b.id==="ownerbtn"){owner=!owner;render();return}
     if(b.id==="addrow"){drafts.push({name:"",upc:"",cost:""});saveDrafts();render();var l=document.getElementById("dn"+(drafts.length-1));if(l)l.focus();return}
     if(b.id==="savefile") return makeLinkClick();
