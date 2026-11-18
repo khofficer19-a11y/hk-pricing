@@ -127,7 +127,8 @@ button{cursor:pointer}
 .sh-head{display:flex;align-items:center;justify-content:space-between;padding:18px 20px 10px}
 .sh-head h2{font-family:var(--serif);font-size:23px;margin:0}
 .x{background:var(--surface);border:1px solid var(--line2);width:36px;height:36px;border-radius:50%;font-size:18px;line-height:1}
-.sh-body{overflow:auto;padding:0 20px 14px;display:grid;gap:14px}
+.sh-body{overflow:auto;padding:0 20px 14px;display:grid;gap:14px;align-content:start;grid-auto-rows:max-content;flex:1 1 auto;min-height:0;-webkit-overflow-scrolling:touch}
+.lines{flex:none}
 .sh-foot{padding:12px 20px calc(14px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--line2);background:var(--surface);display:grid;gap:10px;border-radius:0 0 22px 22px}
 .lines{background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .ln{display:grid;grid-template-columns:1fr auto;gap:4px 10px;padding:12px 14px;border-top:1px solid var(--line);align-items:center}
@@ -135,7 +136,8 @@ button{cursor:pointer}
 .ln .n{font-weight:600;line-height:1.25;word-break:break-word}
 .ln .s{color:var(--muted);font-size:12.5px}
 .ln .t{font-family:var(--serif);font-weight:700;text-align:right;font-variant-numeric:lining-nums tabular-nums}
-.ln .qty{grid-column:2;grid-row:2;justify-self:end}
+.ln .qty{grid-column:2;justify-self:end}
+.ln .t:empty{display:none}
 .ln .qty button{width:34px;height:34px;font-size:18px}.ln .qty input{width:40px;height:34px;font-size:14px}
 .sum{display:flex;justify-content:space-between;align-items:baseline;padding:14px;background:var(--ink);color:var(--cream)}
 .sum b{font-family:var(--serif);font-size:24px;color:var(--gold-l);font-variant-numeric:lining-nums tabular-nums}
@@ -183,6 +185,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
       build();
     }).catch(function(){root.innerHTML='<div class="wrap"><div class="loading">This order list could not be loaded. Please ask H&amp;K for a new link.</div></div>'});
   }
+  function showP(){return CAT&&CAT.prices!==false}
   function hdr(g){var u=true;g.items.forEach(function(i){if(i.p!==g.items[0].p)u=false});return u&&g.items.length?money(g.items[0].p)+" per box":"Price shown per flavor"}
   function build(){
     
@@ -194,11 +197,11 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     CAT.groups.forEach(function(g,gi){h+='<button class="tab" data-tab="'+gi+'" aria-pressed="false">'+esc(g.short||g.name)+'<small>'+g.items.length+'</small></button>'});
     h+='</div></div></div><div class="wrap" id="groups">';
     CAT.groups.forEach(function(g,gi){
-      h+='<section class="group" data-g="'+gi+'"><div class="ghead"><div><h2>'+esc(g.name)+'</h2>'+(g.sub?'<p>'+esc(g.sub)+'</p>':'')+'</div><span class="gprice">'+hdr(g)+'</span></div><div class="list">';
+      h+='<section class="group" data-g="'+gi+'"><div class="ghead"><div><h2>'+esc(g.name)+'</h2>'+(g.sub?'<p>'+esc(g.sub)+'</p>':'')+'</div>'+(showP()?'<span class="gprice">'+hdr(g)+'</span>':'')+'</div><div class="list">';
       g.items.forEach(function(it){h+=rowHtml(it)});
       h+='<div class="none" hidden><b>No flavor found</b>Try a different word.</div></div></section>';
     });
-    h+='<div class="foot"><div class="orn"><i></i></div><b>H&amp;K Distribution</b><span>Prices are per box and may change. Availability is confirmed by H&amp;K when your order is received.</span></div></div>';
+    h+='<div class="foot"><div class="orn"><i></i></div><b>H&amp;K Distribution</b><span>Quantities are in boxes. Pricing and availability are confirmed by H&amp;K when your order is received.</span></div></div>';
     root.innerHTML=h;
     var bar=document.createElement("div");bar.className="bar";bar.innerHTML='<div class="wrap"><div class="tot"><small id="cnt">Nothing selected yet</small><b id="tot">$0.00</b></div><button class="btn primary" id="review" disabled>Review order</button></div>';
     document.body.appendChild(bar);
@@ -207,7 +210,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   }
   function rowHtml(it){
     var q=Q[it.id]||0, low=it.s<=5;
-    return '<div class="row'+(q?' sel':'')+'" id="r_'+it.id+'" data-f="'+esc(it.f.toLowerCase())+'"><div><div class="fl">'+esc(it.f)+'</div><div class="meta"><span class="price">'+money(it.p)+'</span><span class="badge '+(low?'low':'ok')+'">'+(low?'Only '+it.s+' left':'In stock')+'</span></div></div>'+
+    return '<div class="row'+(q?' sel':'')+'" id="r_'+it.id+'" data-f="'+esc(it.f.toLowerCase())+'"><div><div class="fl">'+esc(it.f)+'</div><div class="meta">'+(showP()?'<span class="price">'+money(it.p)+'</span>':'')+'<span class="badge '+(low?'low':'ok')+'">'+(low?'Only '+it.s+' left':'In stock')+'</span></div></div>'+
       '<div class="qty"><button data-m="'+it.id+'" aria-label="Remove one '+esc(it.f)+'"'+(q?'':' disabled')+'>&minus;</button><input inputmode="numeric" pattern="[0-9]*" data-q="'+it.id+'" value="'+(q||"")+'" placeholder="0" aria-label="Quantity of '+esc(it.f)+'"><button data-p="'+it.id+'" aria-label="Add one '+esc(it.f)+'"'+(q>=it.s?' disabled':'')+'>+</button></div></div>';
   }
   function filter(){
@@ -226,8 +229,8 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   }
   function upd(){
     var t=totals();
-    document.getElementById("tot").textContent=money(t.t);
-    document.getElementById("cnt").textContent=t.u?t.u+(t.u===1?" box":" boxes")+" · "+t.l+(t.l===1?" flavor":" flavors"):"Nothing selected yet";
+    document.getElementById("tot").textContent=showP()?money(t.t):(t.u+(t.u===1?" box":" boxes"));
+    document.getElementById("cnt").textContent=t.u?(showP()?t.u+(t.u===1?" box":" boxes")+" · ":"")+t.l+(t.l===1?" flavor":" flavors"):"Nothing selected yet";
     document.getElementById("review").disabled=!t.u;
   }
   function setq(id,v,keep){
@@ -250,14 +253,14 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     var y=154,rows=[["Name",info.name||"-"],["Store",info.store||"-"]];if(info.phone)rows.push(["Phone",info.phone]);
     rows.forEach(function(x){doc.setFont("helvetica","bold");doc.text(x[0],40,y);doc.setFont("helvetica","normal");doc.text(String(x[1]),100,y);y+=16});
     var body=[];
-    CAT.groups.forEach(function(g){var first=true;g.items.forEach(function(it){var q=Q[it.id]||0;if(!q)return;if(first){body.push([{content:g.name,colSpan:4,styles:{fillColor:[246,236,201],fontStyle:"bold",textColor:[20,18,12]}}]);first=false}body.push([it.f,String(q),money(it.p),money(q*it.p)])})});
-    doc.autoTable({startY:y+8,head:[["Flavor","Qty","Price","Total"]],body:body,foot:[[{content:"TOTAL  -  "+t.u+(t.u===1?" box":" boxes"),colSpan:3,styles:{halign:"right"}},money(t.t)]],theme:"grid",
+    CAT.groups.forEach(function(g){var first=true;g.items.forEach(function(it){var q=Q[it.id]||0;if(!q)return;if(first){body.push([{content:g.name,colSpan:(showP()?4:2),styles:{fillColor:[246,236,201],fontStyle:"bold",textColor:[20,18,12]}}]);first=false}body.push(showP()?[it.f,String(q),money(it.p),money(q*it.p)]:[it.f,String(q)])})});
+    doc.autoTable({startY:y+8,head:[showP()?["Flavor","Qty","Price","Total"]:["Flavor","Qty"]],body:body,foot:[showP()?[{content:"TOTAL  -  "+t.u+(t.u===1?" box":" boxes"),colSpan:3,styles:{halign:"right"}},money(t.t)]:[{content:"TOTAL",styles:{halign:"right"}},String(t.u)]],theme:"grid",
       styles:{font:"helvetica",fontSize:10,cellPadding:5,lineColor:[221,214,186],lineWidth:.4,textColor:[30,28,18]},
       headStyles:{fillColor:[20,18,12],textColor:[226,194,90],fontStyle:"bold"},footStyles:{fillColor:[20,18,12],textColor:[226,194,90],fontStyle:"bold",fontSize:11},
-      columnStyles:{0:{cellWidth:"auto"},1:{halign:"center",cellWidth:50},2:{halign:"right",cellWidth:70},3:{halign:"right",cellWidth:80}},margin:{left:40,right:40,bottom:60}});
+      columnStyles:showP()?{0:{cellWidth:"auto"},1:{halign:"center",cellWidth:50},2:{halign:"right",cellWidth:70},3:{halign:"right",cellWidth:80}}:{0:{cellWidth:"auto"},1:{halign:"center",cellWidth:80}},margin:{left:40,right:40,bottom:60}});
     var yy=doc.lastAutoTable.finalY+18;
     if(info.note){doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(60,56,40);doc.text("Note: ",40,yy);doc.setFont("helvetica","normal");doc.text(doc.splitTextToSize(info.note,460),72,yy)}
-    var n=doc.getNumberOfPages();for(var i=1;i<=n;i++){doc.setPage(i);doc.setFont("times","italic");doc.setFontSize(9);doc.setTextColor(110,106,88);doc.text("Prices per box as of "+CAT.date+". Orders are confirmed by H&K before shipping.",40,770);doc.text("Page "+i+" of "+n,W-40,770,{align:"right"})}
+    var n=doc.getNumberOfPages();for(var i=1;i<=n;i++){doc.setPage(i);doc.setFont("times","italic");doc.setFontSize(9);doc.setTextColor(110,106,88);doc.text("Availability as of "+CAT.date+". Orders and pricing are confirmed by H&K before shipping.",40,770);doc.text("Page "+i+" of "+n,W-40,770,{align:"right"})}
     return doc;
   }
   function pdfName(){return "HK-Order-"+ensureRef()+".pdf"}
@@ -274,10 +277,10 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     L.push("*"+(info.name||"-")+"*"+(info.store?"  |  "+info.store:""));
     if(info.phone)L.push("Tel: "+info.phone);
     CAT.groups.forEach(function(g){
-      var lines=[];g.items.forEach(function(it){var q=Q[it.id]||0;if(q)lines.push(q+" x "+it.f+"  -  "+money(q*it.p))});
+      var lines=[];g.items.forEach(function(it){var q=Q[it.id]||0;if(q)lines.push(q+" x "+it.f+(showP()?"  -  "+money(q*it.p):""))});
       if(lines.length){L.push("");L.push("*"+(g.short||g.name).toUpperCase()+"*");lines.forEach(function(x){L.push(x)})}
     });
-    L.push("");L.push("*TOTAL: "+t.u+(t.u===1?" box":" boxes")+"  -  "+money(t.t)+"*");
+    L.push("");L.push("*TOTAL: "+t.u+(t.u===1?" box":" boxes")+(showP()?"  -  "+money(t.t):"")+"*");
     if(info.note){L.push("");L.push("Note: "+info.note)}
     return L.join("\n");
   }
@@ -288,9 +291,9 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     if(!t.u){closeSheet();return}
     var h='<div class="sh-head"><h2 id="shtitle">Review your order</h2><button class="x" id="shx" aria-label="Close">&times;</button></div><div class="sh-body"><div class="lines">';
     all().forEach(function(x){var q=Q[x.it.id]||0;if(!q)return;
-      h+='<div class="ln"><div><div class="n">'+esc(x.it.f)+'</div><div class="s">'+esc(x.g.short||x.g.name)+' · '+money(x.it.p)+' each</div></div><div class="t">'+money(q*x.it.p)+'</div>'+
+      h+='<div class="ln"><div><div class="n">'+esc(x.it.f)+'</div><div class="s">'+esc(x.g.short||x.g.name)+(showP()?' · '+money(x.it.p)+' each':'')+'</div></div><div class="t">'+(showP()?money(q*x.it.p):'')+'</div>'+
         '<div class="qty"><button data-m="'+x.it.id+'" aria-label="Remove one">&minus;</button><input inputmode="numeric" pattern="[0-9]*" data-q="'+x.it.id+'" value="'+q+'" aria-label="Quantity"><button data-p="'+x.it.id+'" aria-label="Add one"'+(q>=x.it.s?' disabled':'')+'>+</button></div></div>'});
-    h+='<div class="sum"><span>Total · '+t.u+(t.u===1?' box':' boxes')+'</span><b>'+money(t.t)+'</b></div></div>';
+    h+='<div class="sum"><span>Total</span><b>'+(showP()?t.u+(t.u===1?' box':' boxes')+' · '+money(t.t):t.u+(t.u===1?' box':' boxes'))+'</b></div></div>';
     h+='<div class="f2"><label class="f">Your name<input id="in_name" autocomplete="name" value="'+esc(info.name)+'" placeholder="Full name"></label><label class="f">Store / company<input id="in_store" autocomplete="organization" value="'+esc(info.store)+'" placeholder="Store or company"></label>'+
        '<label class="f">Phone (optional)<input id="in_phone" type="tel" autocomplete="tel" value="'+esc(info.phone)+'" placeholder="Best number to reach you"></label><label class="f">Note (optional)<input id="in_note" value="'+esc(info.note)+'" placeholder="Delivery or pickup, anything else"></label></div>';
     h+='<div class="note"><b>Send order as PDF</b> makes a neat order sheet; choose H&amp;K in WhatsApp and press Send. <b>Send as WhatsApp message</b> opens our chat with the order typed in. H&amp;K confirms the order and final availability.</div></div>';
