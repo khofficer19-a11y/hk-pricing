@@ -99,6 +99,13 @@ button{cursor:pointer}
 .qty button[disabled]{opacity:.3}
 .qty input{width:48px;height:42px;text-align:center;border:0;border-left:1px solid var(--line);border-right:1px solid var(--line);background:var(--surface);font-size:16px;font-weight:700;padding:0;min-width:0;font-variant-numeric:tabular-nums}
 .qty input::placeholder{color:var(--muted);font-weight:500}
+.group.lz{margin-top:10px}
+.ghd{width:100%;display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line2);border-radius:14px;padding:13px 16px;text-align:left;box-shadow:var(--shadow)}
+.ghd b{font-family:var(--serif);font-size:17px;display:block;line-height:1.2;word-break:break-word}
+.ghd small{color:var(--muted);font-size:12.5px}
+.ghd i{font-style:normal;font-size:22px;color:var(--gold-d);width:28px;text-align:center}
+.group.lz .list{margin-top:8px}
+.sg{padding:10px 16px 0;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-d)}
 .none{padding:34px 14px;text-align:center;color:var(--muted)}
 .none b{display:block;color:var(--fg);font-family:var(--serif);font-size:18px;margin-bottom:4px}
 .foot{margin:34px 0 8px;padding-top:20px;color:var(--muted);font-size:12.5px;display:grid;gap:6px;text-align:center;justify-items:center}
@@ -169,8 +176,9 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   function esc(s){return String(s==null?"":s).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
   function money(n){return "$"+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,",")}
   function param(k){var m=location.search.match(new RegExp("[?&]"+k+"=([^&]*)"));return m?decodeURIComponent(m[1]):""}
-  function all(){var a=[];CAT.groups.forEach(function(g,gi){g.items.forEach(function(it){a.push({g:g,gi:gi,it:it})})});return a}
-  function find(id){var r=null;all().forEach(function(x){if(x.it.id===id)r=x});return r}
+  var ALLC=null,IDX=null;
+  function all(){if(!ALLC){ALLC=[];IDX={};CAT.groups.forEach(function(g,gi){g.items.forEach(function(it){var x={g:g,gi:gi,it:it};ALLC.push(x);IDX[it.id]=x})})}return ALLC}
+  function find(id){all();return IDX[id]||null}
   function totals(){var u=0,t=0,l=0;all().forEach(function(x){var q=Q[x.it.id]||0;if(q){u+=q;t+=q*x.it.p;l++}});return {u:u,t:t,l:l}}
   function save(){try{localStorage.setItem(KEY+"-"+CAT._id,JSON.stringify({q:Q,i:info}))}catch(e){}}
   function load(){
@@ -190,11 +198,14 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     var n=all().length;
     var h='<section class="herow"><div class="wrap hero"><h1>Sales Order Request</h1><div class="orn"><i></i></div><p>Pick your flavors and quantities, then send your order to H&amp;K on WhatsApp. We confirm every order before it ships.</p>'+
       '<ol class="steps"><li><i>1</i>Choose</li><li><i>2</i>Review</li><li><i>3</i>Send</li></ol><div class="asof">Availability as of '+esc(CAT.date)+'</div></div></section>';
-    h+='<div class="tools" id="tools"><div class="wrap"><div class="search">'+ICON_S+'<input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Search flavor" aria-label="Search flavor"><button id="qx" aria-label="Clear search" hidden>&times;</button></div>'+
+    h+='<div class="tools" id="tools"><div class="wrap"><div class="search">'+ICON_S+'<input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Search product" aria-label="Search product"><button id="qx" aria-label="Clear search" hidden>&times;</button></div>'+
       '<div class="tabs" role="group" aria-label="Product type"><button class="tab" data-tab="all" aria-pressed="true">All<small>'+n+'</small></button>';
-    CAT.groups.forEach(function(g,gi){h+='<button class="tab" data-tab="'+gi+'" aria-pressed="false">'+esc(g.short||g.name)+'<small>'+g.items.length+'</small></button>'});
+    if(CAT.lazy)CAT.cats.forEach(function(c,ci){h+='<button class="tab" data-tab="c'+ci+'" aria-pressed="false">'+esc(c.name)+'<small>'+c.n+'</small></button>'});
+    else CAT.groups.forEach(function(g,gi){h+='<button class="tab" data-tab="'+gi+'" aria-pressed="false">'+esc(g.short||g.name)+'<small>'+g.items.length+'</small></button>'});
     h+='</div></div></div><div class="wrap" id="groups">';
+    if(CAT.lazy)h+='<div class="list" id="sres" hidden></div>';
     CAT.groups.forEach(function(g,gi){
+      if(CAT.lazy){h+='<section class="group lz" data-g="'+gi+'" data-c="'+g.ci+'"><button class="ghd" data-open="'+gi+'" aria-expanded="false"><span><b>'+esc(g.name)+'</b><small>'+g.items.length+(g.items.length===1?' product':' products')+'</small></span><i aria-hidden="true">+</i></button><div class="list" hidden></div></section>';return}
       h+='<section class="group" data-g="'+gi+'"><div class="ghead"><div><h2>'+esc(g.name)+'</h2>'+(g.sub?'<p>'+esc(g.sub)+'</p>':'')+'</div>'+(showP()?'<span class="gprice">'+hdr(g)+'</span>':'')+'</div><div class="list">';
       g.items.forEach(function(it){h+=rowHtml(it)});
       h+='<div class="none" hidden><b>No flavor found</b>Try a different word.</div></div></section>';
@@ -206,13 +217,27 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     upd();
     window.addEventListener("scroll",function(){document.getElementById("tools").classList.toggle("stuck",window.scrollY>140)},{passive:true});
   }
-  function rowHtml(it){
+  function rowHtml(it,pre){
     var q=Q[it.id]||0, low=it.s<=5;
-    return '<div class="row'+(q?' sel':'')+'" id="r_'+it.id+'" data-f="'+esc(it.f.toLowerCase())+'"><div><div class="fl">'+esc(it.f)+'</div><div class="meta">'+(showP()?'<span class="price">'+money(it.p)+'</span>':'')+'<span class="badge '+(low?'low':'ok')+'">'+(low?'Only '+it.s+' left':'In stock')+'</span></div></div>'+
+    return '<div class="row'+(q?' sel':'')+'" id="'+(pre||"r_")+it.id+'" data-f="'+esc(it.f.toLowerCase())+'"><div><div class="fl">'+esc(it.f)+'</div><div class="meta">'+(showP()?'<span class="price">'+money(it.p)+'</span>':'')+'<span class="badge '+(low?'low':'ok')+'">'+(low?'Only '+it.s+' left':'In stock')+'</span></div></div>'+
       '<div class="qty"><button data-m="'+it.id+'" aria-label="Remove one '+esc(it.f)+'"'+(q?'':' disabled')+'>&minus;</button><input inputmode="numeric" pattern="[0-9]*" data-q="'+it.id+'" value="'+(q||"")+'" placeholder="0" aria-label="Quantity of '+esc(it.f)+'"><button data-p="'+it.id+'" aria-label="Add one '+esc(it.f)+'"'+(q>=it.s?' disabled':'')+'>+</button></div></div>';
   }
   function filter(){
     var t=term.trim().toLowerCase();
+    if(CAT.lazy){
+      document.getElementById("qx").hidden=!term;
+      var sr=document.getElementById("sres");
+      if(t.length>=2){
+        var out=[],more=false;
+        for(var i=0;i<ALLC.length;i++){var x=ALLC[i];if((x.g.name+" "+x.it.f+" "+(x.it.u||"")).toLowerCase().indexOf(t)>-1){if(out.length>=120){more=true;break}out.push(x)}}
+        sr.innerHTML=out.length?out.map(function(x){return '<div class="sg">'+esc(x.g.name)+'</div>'+rowHtml(x.it,"s_")}).join("")+(more?'<div class="none">Showing the first 120 matches. Type more letters to narrow it down.</div>':''):'<div class="none"><b>No product found</b>Try a different word.</div>';
+        sr.hidden=false;document.querySelectorAll(".group").forEach(function(s){s.hidden=true});
+      }else{
+        sr.hidden=true;sr.innerHTML="";
+        document.querySelectorAll(".group").forEach(function(s){s.hidden=!(tab==="all"||tab==="c"+s.getAttribute("data-c"))});
+      }
+      return;
+    }
     document.querySelectorAll(".group").forEach(function(sec){
       var gi=sec.getAttribute("data-g"), show=(tab==="all"||tab===gi), vis=0;
       sec.querySelectorAll(".row").forEach(function(r){var ok=!t||r.getAttribute("data-f").indexOf(t)>-1;r.hidden=!ok;if(ok)vis++});
@@ -223,7 +248,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   }
   function paintRow(id){
     var x=find(id);if(!x)return;var q=Q[id]||0;
-    var r=document.getElementById("r_"+id);if(r){r.classList.toggle("sel",!!q);var i=r.querySelector("[data-q]");if(i&&document.activeElement!==i)i.value=q||"";r.querySelector("[data-m]").disabled=!q;r.querySelector("[data-p]").disabled=q>=x.it.s}
+    ["r_","s_"].forEach(function(pre){var r=document.getElementById(pre+id);if(r){r.classList.toggle("sel",!!q);var i=r.querySelector("[data-q]");if(i&&document.activeElement!==i)i.value=q||"";r.querySelector("[data-m]").disabled=!q;r.querySelector("[data-p]").disabled=q>=x.it.s}})
   }
   function upd(){
     var t=totals();
@@ -325,6 +350,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   }
   document.addEventListener("click",function(e){
     var b=e.target.closest("button");if(!b)return;
+    if(b.dataset.open!==undefined){var sec=b.closest(".group"),ls=sec.querySelector(".list"),op=b.getAttribute("aria-expanded")!=="true";if(op&&!ls.firstChild){ls.innerHTML=CAT.groups[+b.dataset.open].items.map(function(it){return rowHtml(it)}).join("")}ls.hidden=!op;b.setAttribute("aria-expanded",String(op));b.querySelector("i").textContent=op?"−":"+";return}
     if(b.dataset.tab!==undefined){tab=b.dataset.tab;document.querySelectorAll(".tab").forEach(function(t){t.setAttribute("aria-pressed",String(t===b))});filter();return}
     if(b.dataset.p){setq(b.dataset.p,(Q[b.dataset.p]||0)+1);return}
     if(b.dataset.m){setq(b.dataset.m,(Q[b.dataset.m]||0)-1);return}
