@@ -250,7 +250,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     doc.setFont("times","normal");doc.setFontSize(10);doc.setTextColor(230,224,200);doc.text("#"+info.ref+"    "+nowStr(),W-40,74,{align:"right"});
     doc.setTextColor(20,18,12);doc.setFont("times","bold");doc.setFontSize(15);doc.text(CAT.title,40,134);
     doc.setFont("helvetica","normal");doc.setFontSize(10.5);doc.setTextColor(60,56,40);
-    var y=154,rows=[["Name",info.name||"-"],["Store",info.store||"-"]];if(info.phone)rows.push(["Phone",info.phone]);
+    var y=154,rows=[["Customer",info.store||"-"]];if(info.phone)rows.push(["Phone",info.phone]);
     rows.forEach(function(x){doc.setFont("helvetica","bold");doc.text(x[0],40,y);doc.setFont("helvetica","normal");doc.text(String(x[1]),100,y);y+=16});
     var body=[];
     CAT.groups.forEach(function(g){var first=true;g.items.forEach(function(it){var q=Q[it.id]||0;if(!q)return;if(first){body.push([{content:g.name,colSpan:(showP()?4:2),styles:{fillColor:[246,236,201],fontStyle:"bold",textColor:[20,18,12]}}]);first=false}body.push(showP()?[it.f,String(q),money(it.p),money(q*it.p)]:[it.f,String(q)])})});
@@ -274,7 +274,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   function msg(){
     var t=totals(), L=[];
     ensureRef();L.push("*SALES ORDER REQUEST*  |  "+(CAT.brand||CAT.title)+"  |  #"+info.ref);
-    L.push("*"+(info.name||"-")+"*"+(info.store?"  |  "+info.store:""));
+    L.push("*CUSTOMER: "+(info.store||"-")+"*");
     if(info.phone)L.push("Tel: "+info.phone);
     CAT.groups.forEach(function(g){
       var lines=[];g.items.forEach(function(it){var q=Q[it.id]||0;if(q)lines.push(q+" x "+it.f+(showP()?"  -  "+money(q*it.p):""))});
@@ -294,7 +294,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
       h+='<div class="ln"><div><div class="n">'+esc(x.it.f)+'</div><div class="s">'+esc(x.g.short||x.g.name)+(showP()?' · '+money(x.it.p)+' each':'')+'</div></div><div class="t">'+(showP()?money(q*x.it.p):'')+'</div>'+
         '<div class="qty"><button data-m="'+x.it.id+'" aria-label="Remove one">&minus;</button><input inputmode="numeric" pattern="[0-9]*" data-q="'+x.it.id+'" value="'+q+'" aria-label="Quantity"><button data-p="'+x.it.id+'" aria-label="Add one"'+(q>=x.it.s?' disabled':'')+'>+</button></div></div>'});
     h+='<div class="sum"><span>Total</span><b>'+(showP()?t.u+(t.u===1?' box':' boxes')+' · '+money(t.t):t.u+(t.u===1?' box':' boxes'))+'</b></div></div>';
-    h+='<div class="f2"><label class="f">Your name<input id="in_name" autocomplete="name" value="'+esc(info.name)+'" placeholder="Full name"></label><label class="f">Store / company<input id="in_store" autocomplete="organization" value="'+esc(info.store)+'" placeholder="Store or company"></label>'+
+    h+='<div class="f2"><label class="f full">Customer account name<input id="in_store" autocomplete="organization" value="'+esc(info.store)+'" placeholder="Your account name with H&amp;K"></label>'+
        '<label class="f full">Note (optional)<input id="in_note" value="'+esc(info.note)+'" placeholder="Delivery or pickup, anything else"></label></div>';
     h+='<div class="note"><b>Send order as PDF</b> makes a neat order sheet; choose H&amp;K in WhatsApp and press Send. <b>Send as WhatsApp message</b> opens our chat with the order typed in. Your WhatsApp number is sent with it, so we can reach you. H&amp;K confirms the order and final availability.</div></div>';
     h+='<div class="sh-foot"><div class="msg" id="msg" role="status"></div><button class="btn primary wide" id="sendpdf">Send order as PDF</button><button class="btn wide" id="send">Send as WhatsApp message</button><button class="btn wide" id="copy">Copy order text</button></div>';
@@ -303,8 +303,8 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   }
   function msgSet(t,err){var m=document.getElementById("msg");if(m){m.textContent=t;m.className="msg"+(err?" err":"")}}
   function need(){
-    var ok=true;["in_name","in_store"].forEach(function(id){var e=document.getElementById(id);var v=e&&e.value.trim();if(e)e.classList.toggle("err",!v);if(!v)ok=false});
-    if(!ok){msgSet("Please type your name and store name.",true);var e=document.getElementById(info.name?"in_store":"in_name");if(e)e.focus()}
+    var ok=true;["in_store"].forEach(function(id){var e=document.getElementById(id);var v=e&&e.value.trim();if(e)e.classList.toggle("err",!v);if(!v)ok=false});
+    if(!ok){msgSet("Please type your customer account name.",true);var e=document.getElementById("in_store");if(e)e.focus()}
     return ok;
   }
   function doneSheet(kind){
@@ -328,9 +328,9 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     if(b.id==="qx"){var q=document.getElementById("q");q.value="";term="";filter();q.focus();return}
     if(b.id==="review"){openSheet();return}
     if(b.id==="shx"||b.id==="back"){if(b.id==="back"){renderSheet();return}closeSheet();return}
-    if(b.id==="sendpdf"){info.name=(document.getElementById("in_name").value||"").trim();info.store=(document.getElementById("in_store").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return;sendPdf();return}
-    if(b.id==="send"||b.id==="send2"){ if(b.id==="send"){info.name=(document.getElementById("in_name").value||"").trim();info.store=(document.getElementById("in_store").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return} wa();doneSheet();return}
-    if(b.id==="copy"){var n=document.getElementById("in_name");if(n){info.name=n.value.trim();info.store=document.getElementById("in_store").value.trim();info.note=document.getElementById("in_note").value.trim();save();if(!need())return}copy();return}
+    if(b.id==="sendpdf"){info.store=(document.getElementById("in_store").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return;sendPdf();return}
+    if(b.id==="send"||b.id==="send2"){ if(b.id==="send"){info.store=(document.getElementById("in_store").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return} wa();doneSheet();return}
+    if(b.id==="copy"){var n=document.getElementById("in_store");if(n){info.store=n.value.trim();info.note=document.getElementById("in_note").value.trim();save();if(!need())return}copy();return}
   });
   scrim.addEventListener("click",closeSheet);
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&sheet.classList.contains("on"))closeSheet()});
@@ -338,7 +338,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     var el=e.target;
     if(el.id==="q"){term=el.value;filter();return}
     if(el.dataset&&el.dataset.q){var id=el.dataset.q,v=parseInt(el.value,10);var x=find(id);if(isNaN(v)||v<=0){delete Q[id]}else{Q[id]=Math.min(x.it.s,v)}paintRow(id);save();upd();return}
-    if(el.id==="in_name"||el.id==="in_store"){el.classList.remove("err")}
+    if(el.id==="in_store"){el.classList.remove("err")}
   });
   document.addEventListener("change",function(e){var el=e.target;if(el.dataset&&el.dataset.q){var id=el.dataset.q;el.value=Q[id]||"";if(sheet.classList.contains("on"))renderSheet(true)}});
   load();
