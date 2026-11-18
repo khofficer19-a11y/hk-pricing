@@ -295,8 +295,8 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
         '<div class="qty"><button data-m="'+x.it.id+'" aria-label="Remove one">&minus;</button><input inputmode="numeric" pattern="[0-9]*" data-q="'+x.it.id+'" value="'+q+'" aria-label="Quantity"><button data-p="'+x.it.id+'" aria-label="Add one"'+(q>=x.it.s?' disabled':'')+'>+</button></div></div>'});
     h+='<div class="sum"><span>Total</span><b>'+(showP()?t.u+(t.u===1?' box':' boxes')+' · '+money(t.t):t.u+(t.u===1?' box':' boxes'))+'</b></div></div>';
     h+='<div class="f2"><label class="f">Your name<input id="in_name" autocomplete="name" value="'+esc(info.name)+'" placeholder="Full name"></label><label class="f">Store / company<input id="in_store" autocomplete="organization" value="'+esc(info.store)+'" placeholder="Store or company"></label>'+
-       '<label class="f">Phone (optional)<input id="in_phone" type="tel" autocomplete="tel" value="'+esc(info.phone)+'" placeholder="Best number to reach you"></label><label class="f">Note (optional)<input id="in_note" value="'+esc(info.note)+'" placeholder="Delivery or pickup, anything else"></label></div>';
-    h+='<div class="note"><b>Send order as PDF</b> makes a neat order sheet; choose H&amp;K in WhatsApp and press Send. <b>Send as WhatsApp message</b> opens our chat with the order typed in. H&amp;K confirms the order and final availability.</div></div>';
+       '<label class="f full">Note (optional)<input id="in_note" value="'+esc(info.note)+'" placeholder="Delivery or pickup, anything else"></label></div>';
+    h+='<div class="note"><b>Send order as PDF</b> makes a neat order sheet; choose H&amp;K in WhatsApp and press Send. <b>Send as WhatsApp message</b> opens our chat with the order typed in. Your WhatsApp number is sent with it, so we can reach you. H&amp;K confirms the order and final availability.</div></div>';
     h+='<div class="sh-foot"><div class="msg" id="msg" role="status"></div><button class="btn primary wide" id="sendpdf">Send order as PDF</button><button class="btn wide" id="send">Send as WhatsApp message</button><button class="btn wide" id="copy">Copy order text</button></div>';
     sheet.innerHTML=h;
     if(!keepFocus){var x=document.getElementById("shx");if(x)x.focus()}
@@ -328,9 +328,9 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     if(b.id==="qx"){var q=document.getElementById("q");q.value="";term="";filter();q.focus();return}
     if(b.id==="review"){openSheet();return}
     if(b.id==="shx"||b.id==="back"){if(b.id==="back"){renderSheet();return}closeSheet();return}
-    if(b.id==="sendpdf"){info.name=(document.getElementById("in_name").value||"").trim();info.store=(document.getElementById("in_store").value||"").trim();info.phone=(document.getElementById("in_phone").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return;sendPdf();return}
-    if(b.id==="send"||b.id==="send2"){ if(b.id==="send"){info.name=(document.getElementById("in_name").value||"").trim();info.store=(document.getElementById("in_store").value||"").trim();info.phone=(document.getElementById("in_phone").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return} wa();doneSheet();return}
-    if(b.id==="copy"){var n=document.getElementById("in_name");if(n){info.name=n.value.trim();info.store=document.getElementById("in_store").value.trim();info.phone=document.getElementById("in_phone").value.trim();info.note=document.getElementById("in_note").value.trim();save();if(!need())return}copy();return}
+    if(b.id==="sendpdf"){info.name=(document.getElementById("in_name").value||"").trim();info.store=(document.getElementById("in_store").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return;sendPdf();return}
+    if(b.id==="send"||b.id==="send2"){ if(b.id==="send"){info.name=(document.getElementById("in_name").value||"").trim();info.store=(document.getElementById("in_store").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return} wa();doneSheet();return}
+    if(b.id==="copy"){var n=document.getElementById("in_name");if(n){info.name=n.value.trim();info.store=document.getElementById("in_store").value.trim();info.note=document.getElementById("in_note").value.trim();save();if(!need())return}copy();return}
   });
   scrim.addEventListener("click",closeSheet);
   document.addEventListener("keydown",function(e){if(e.key==="Escape"&&sheet.classList.contains("on"))closeSheet()});
