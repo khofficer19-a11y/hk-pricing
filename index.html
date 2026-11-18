@@ -89,6 +89,14 @@ button{cursor:pointer}
 .mx .lbl{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--warn)}
 .mx.chk .lbl{color:var(--bad)} .mx.nn .lbl{color:var(--blue)}
 .mx q{font-style:normal;font-weight:700}
+.cmp{display:grid;gap:6px}
+.cmp .r{display:grid;grid-template-columns:92px 1fr;gap:8px;align-items:start}
+.cmp small{color:var(--muted);font-size:12px}
+.who{font-style:normal;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;border-radius:6px;padding:4px 4px;text-align:center;line-height:1.2}
+.who.so{background:var(--blue);color:#fff}
+.who.hk{background:var(--ink);color:var(--gold-l)}
+.ask{font-weight:700;font-size:14.5px}
+.hint{font-size:11.5px;color:var(--muted)}
 .ch{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .ch button{border:1px solid var(--line2);background:var(--surface);border-radius:10px;padding:10px 6px;font-weight:700;font-size:13.5px}
 .ch button[aria-pressed="true"].a{background:var(--good);border-color:var(--good);color:#fff}
@@ -156,30 +164,38 @@ button{cursor:pointer}
     if(o&&o.i&&o.i.length){start({title:"New item prices",date:o.u||"",hero:"Item Pricing",items:o.i.map(function(x,k){return {id:"d"+k,n:x[0],u:x[1]||"",c:num(x[2]),im:x[3]||"",m:"plain",inv:[]}})},"d"+hash(d));return}
     start({title:"New item prices",date:"",hero:"Item Pricing",example:true,items:[{id:"d0",n:"Example item",u:"",c:6.5,m:"plain",inv:[]}]},"example");
   }
-  function qText(it){
-    var iv=it.inv||[],h="";
-    if(it.m==="extra") return "The invoice lists <q>"+esc(it.inv[0].d)+"</q> ("+esc(it.inv[0].r)+(it.inv[0].p!=null?", "+money(it.inv[0].p):"")+"), but it is not in our receiving record.";
-    if(it.m==="none") return "Our receiving record (PO 1414) has <q>"+esc(it.n)+"</q>, but it does not appear on invoices 39885 or 39906.";
-    if(it.m==="twice"){h="The invoice lists this product on "+iv.length+" lines: "+iv.map(function(x){return "<q>"+esc(x.d)+"</q> ("+esc(x.r)+(x.p!=null?", "+money(x.p):"")+")"}).join(" and ")+". Our receiving record shows 1 box: <q>"+esc(it.n)+"</q>.";}
-    else h="The invoice says <q>"+esc(iv[0].d)+"</q> ("+esc(iv[0].r)+(iv[0].p!=null?", "+money(iv[0].p):"")+"). Our receiving record says <q>"+esc(it.n)+"</q>.";
-    if(it.note) h+=" "+esc(it.note);
-    if(it.v) h+=" To confirm: "+esc(it.v);
-    return h;
+  function so(){return CAT.supplier||"Supplier"}
+  function cr(who,cls,html){return '<div class="r"><i class="who '+cls+'">'+who+'</i><span>'+html+'</span></div>'}
+  function lineHtml(x){return '<q>'+esc(x.d)+'</q> <small>'+esc(x.r)+(x.p!=null?' \u00b7 '+money(x.p):'')+'</small>'}
+  function cmpHtml(it){
+    var iv=it.inv||[],a="",b="";
+    if(it.m==="extra"){a=lineHtml(iv[0]);b='<small>Not listed</small>'}
+    else if(it.m==="none"){a='<small>Not found on the invoices</small>';b='<q>'+esc(it.n)+'</q>'}
+    else if(it.m==="twice"){a=iv.map(lineHtml).join("<br>");b='<q>'+esc(it.n)+'</q> <small>1 box received</small>'}
+    else{a=lineHtml(iv[0]);b='<q>'+esc(it.n)+'</q>'}
+    return '<div class="cmp">'+cr(esc(so())+" invoice","so",a)+cr("H&amp;K PO","hk",b)+'</div>';
+  }
+  function askText(it){
+    if(it.m==="extra")return "Was this item delivered? Add it to the PO, or mark Not received.";
+    if(it.m==="none")return "Was this item delivered? If yes, please add it to the invoice.";
+    if(it.m==="twice")return "Invoiced twice, 1 box received. Approve 1 box, or Edit.";
+    if(it.m==="check"&&it.v)return esc(it.v);
+    return "Same product?";
   }
   function matchHtml(it){
     if(it.m==="plain")return "";
     var d0=D[it.id]||{c:"",t:""},d={c:cur(it),t:d0.t},h="";
     if(it.m==="cert"){
-      h+='<div class="mx ok"><div><b>Matched 100%</b><span>'+(it.b?"by "+esc(it.b)+" · ":"")+"invoice "+esc(it.inv[0].r)+'</span></div></div>';
+      h+='<div class="mx ok"><div><b>Matched 100%</b><span>'+esc(so())+" invoice "+esc(it.inv[0].r)+(it.b?" · by "+esc(it.b):"")+'</span></div></div>';
       if(NT[it.id]!==undefined) h+='<input class="dtx" data-nt="'+it.id+'" value="'+esc(NT[it.id])+'" placeholder="Your note">';
       else h+='<button class="addn" data-addn="'+it.id+'">Add a note</button>';
     }else{
-      var cls=it.m==="check"?"chk":((it.m==="none"||it.m==="extra")?"nn":""),lbl={prob:"Probable match - approved unless you change it",check:"Please check",none:"Not on the invoice",twice:"Invoiced twice",extra:"On the invoice, not received"}[it.m];
+      var cls=it.m==="check"?"chk":((it.m==="none"||it.m==="extra")?"nn":""),lbl={prob:"Pre-approved - change only if wrong",check:"Please check",none:"Not on the invoice",twice:"Invoiced twice",extra:"Not on H&amp;K PO"}[it.m];
       var bl=it.m==="extra"?["Add to PO","Not received","Put note"]:["Approve","Edit","Put note"],bc=it.m==="extra"?["a","r","n"]:["a","e","n"];
-      h+='<div class="mx q '+cls+'"><div class="lbl">'+lbl+'</div><div>'+qText(it)+'</div><div class="ch" role="group" aria-label="Your answer"><button class="a" data-c="'+it.id+'|'+bc[0]+'" aria-pressed="'+(d.c===bc[0])+'">'+bl[0]+'</button><button class="'+(it.m==="extra"?"r":"e")+'" data-c="'+it.id+'|'+bc[1]+'" aria-pressed="'+(d.c===bc[1])+'">'+bl[1]+'</button><button class="n" data-c="'+it.id+'|n" aria-pressed="'+(d.c==="n")+'">'+bl[2]+'</button></div>'+
+      h+='<div class="mx q '+cls+'"><div class="lbl">'+lbl+'</div>'+cmpHtml(it)+'<div class="ask">'+askText(it)+'</div><div class="ch" role="group" aria-label="Your answer"><button class="a" data-c="'+it.id+'|'+bc[0]+'" aria-pressed="'+(d.c===bc[0])+'">'+bl[0]+'</button><button class="'+(it.m==="extra"?"r":"e")+'" data-c="'+it.id+'|'+bc[1]+'" aria-pressed="'+(d.c===bc[1])+'">'+bl[1]+'</button><button class="n" data-c="'+it.id+'|n" aria-pressed="'+(d.c==="n")+'">'+bl[2]+'</button></div>'+(it.m==="prob"||it.m==="check"?'<div class="hint">Approve = same product. Edit = the H&amp;K name is wrong. Put note = anything else.</div>':'')+
         '<input class="dtx" data-t="'+it.id+'" value="'+esc(d.t||"")+'" placeholder="'+(d.c==="e"?"Type the correct name or UPC":"Type your note")+'"'+((d.c==="e"||d.c==="n")?"":" hidden")+'></div>';
     }
-    if(it.k) h+='<div class="kn">'+esc(it.k).replace(/^(H&amp;K note:|Naming decision:)/,"<b>$1</b>")+'</div>';
+    if(it.k) h+='<div class="kn"><b>H&amp;K note:</b> '+esc(it.k)+'</div>';
     return h;
   }
   function tiersHtml(it){
@@ -196,7 +212,7 @@ button{cursor:pointer}
   }
   function build(){
     var n=CAT.items.filter(pricable).length,review=CAT.items.some(function(i){return i.m!=="plain"}),small=!review&&n<=6;
-    var h='<section class="herow"><div class="wrap hero"><h1>'+esc(CAT.hero||"Prices and Review")+'</h1><div class="orn"><i></i></div><div class="sub">'+esc(CAT.title)+' · '+n+(n===1?' product':' products')+'</div>'+(review?'<p>Please enter the <b>Tier 1 to Tier 4</b> prices (Tier 5 and Standard follow Tier 4) and answer each question with <b>Approve</b>, <b>Edit</b> or <b>Put note</b>. When finished, tap <b>Send as PDF</b>.</p>':'<p>Type the <b>Tier 1 to Tier 4</b> selling price for each item. The margin shows automatically. Tier 5 and Standard follow Tier 4. Then tap <b>Send to Khaled on WhatsApp</b>.</p>')+'<div class="sum" id="sum"></div></div></section>';
+    var h='<section class="herow"><div class="wrap hero"><h1>'+esc(CAT.hero||"Prices and Review")+'</h1><div class="orn"><i></i></div><div class="sub">'+esc(CAT.title)+' · '+n+(n===1?' product':' products')+'</div>'+(review?'<p>Enter the <b>Tier 1 to 4</b> prices (Tier 5 and Standard follow Tier 4). Answer each yellow question: <b>Approve</b> if it matches, <b>Edit</b> if H&amp;K is wrong, or <b>Put note</b>. Then tap <b>Send as PDF</b>.</p>':'<p>Type the <b>Tier 1 to Tier 4</b> selling price for each item. The margin shows automatically. Tier 5 and Standard follow Tier 4. Then tap <b>Send to Khaled on WhatsApp</b>.</p>')+'<div class="sum" id="sum"></div></div></section>';
     h+='<div class="tools" id="tools"'+(small?' hidden':'')+'><div class="wrap"><div class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="Search product or UPC" autocomplete="off"></div><div class="chips" role="group" aria-label="Filter"><button class="chip" data-f="all" aria-pressed="true">All <small id="c_all"></small></button><button class="chip" data-f="open" aria-pressed="false">To answer <small id="c_open"></small></button><button class="chip" data-f="unpriced" aria-pressed="false">Not priced <small id="c_unpriced"></small></button><button class="chip" data-f="priced" aria-pressed="false">Priced <small id="c_priced"></small></button></div></div></div>';
     h+='<div class="wrap"><div class="list" id="list">';
     CAT.items.forEach(function(it){h+=itemHtml(it)});
