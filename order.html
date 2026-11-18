@@ -5,22 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Sales Order Request H&amp;K</title>
 <meta name="description" content="Choose your flavors and send your order to H&amp;K Distribution.">
-<meta name="theme-color" content="#14120c">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="H&amp;K Distribution">
 <meta property="og:title" content="Sales Order Request H&amp;K">
 <meta property="og:description" content="Choose your flavors and send your order.">
-<meta property="og:image" content="https://khofficer19-a11y.github.io/hk-pricing/og_order2.png">
-<meta property="og:image:type" content="image/png">
+<meta property="og:url" content="https://khofficer19-a11y.github.io/hk-pricing/order.html">
+<meta property="og:image" content="https://khofficer19-a11y.github.io/hk-pricing/og_order3.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="H&amp;K Distribution - Sales Order Request">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Sales Order Request H&amp;K">
-<meta name="twitter:description" content="Choose your flavors and send your order.">
-<meta name="twitter:image" content="https://khofficer19-a11y.github.io/hk-pricing/og_order2.png">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap">
 <style>
 :root{
@@ -244,6 +237,10 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     if(v)Q[id]=v;else delete Q[id];
     paintRow(id);save();upd();if(sheet.classList.contains("on")&&!keep)renderSheet(true);
   }
+  var PDFJS="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js",PDFAT="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js";
+  function loadScript(src){return new Promise(function(res,rej){var el=document.createElement("script");el.src=src;el.onload=res;el.onerror=rej;document.head.appendChild(el)})}
+  function pdfReady(){return !!(window.jspdf&&window.jspdf.jsPDF&&window.jspdf.jsPDF.API&&window.jspdf.jsPDF.API.autoTable)}
+  var pdfP=null;function pdfLibs(){if(pdfReady())return Promise.resolve();if(!pdfP)pdfP=loadScript(PDFJS).then(function(){return loadScript(PDFAT)}).catch(function(e){pdfP=null;throw e});return pdfP}
   function ensureRef(){if(!info.ref){var d=new Date(),a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",r="";for(var i=0;i<4;i++)r+=a.charAt(Math.floor(Math.random()*a.length));info.ref=("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2)+"-"+r;save()}return info.ref}
   function nowStr(){var d=new Date();return d.toLocaleDateString("en-US")+" "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
   function makePdf(){
@@ -270,6 +267,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   }
   function pdfName(){return "HK-Order-"+ensureRef()+".pdf"}
   function sendPdf(){
+    if(!pdfReady()){msgSet("Preparing your PDF...");pdfLibs().then(sendPdf).catch(function(){msgSet("Could not make the PDF. Please use Send as WhatsApp message.",true)});return}
     var doc=makePdf();if(!doc){msgSet("Could not make the PDF. Please use Send as text.",true);return}
     var blob=doc.output("blob"),file=new File([blob],pdfName(),{type:"application/pdf"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
@@ -289,7 +287,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     if(info.note){L.push("");L.push("Note: "+info.note)}
     return L.join("\n");
   }
-  function openSheet(){sent=false;renderSheet();sheet.classList.add("on");scrim.classList.add("on");sheet.setAttribute("aria-hidden","false");document.body.style.overflow="hidden"}
+  function openSheet(){pdfLibs().catch(function(){});sent=false;renderSheet();sheet.classList.add("on");scrim.classList.add("on");sheet.setAttribute("aria-hidden","false");document.body.style.overflow="hidden"}
   function closeSheet(){sheet.classList.remove("on");scrim.classList.remove("on");sheet.setAttribute("aria-hidden","true");document.body.style.overflow=""}
   function renderSheet(keepFocus){
     var t=totals();
