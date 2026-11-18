@@ -235,14 +235,16 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     paintRow(id);save();upd();if(sheet.classList.contains("on")&&!keep)renderSheet(true);
   }
   function msg(){
-    var L=["NEW ORDER - "+CAT.title,"Name: "+(info.name||"-"),"Store: "+(info.store||"-")];
-    if(info.phone)L.push("Phone: "+info.phone);
-    L.push("");
-    var t=totals();
-    all().forEach(function(x){var q=Q[x.it.id]||0;if(q)L.push(q+" x "+x.g.name+" - "+x.it.f+" @ "+money(x.it.p)+" = "+money(q*x.it.p)+(x.it.u?"  [UPC "+x.it.u+"]":""))});
-    L.push("");L.push("TOTAL: "+t.u+(t.u===1?" box, ":" boxes, ")+money(t.t));
-    if(info.note)L.push("Note: "+info.note);
-    L.push("");L.push("Sent from the H&K order form ("+CAT.date+" prices)");
+    var t=totals(), L=[];
+    L.push("*NEW ORDER*  |  "+(CAT.brand||CAT.title));
+    L.push("*"+(info.name||"-")+"*"+(info.store?"  |  "+info.store:""));
+    if(info.phone)L.push("Tel: "+info.phone);
+    CAT.groups.forEach(function(g){
+      var lines=[];g.items.forEach(function(it){var q=Q[it.id]||0;if(q)lines.push(q+" x "+it.f+"  -  "+money(q*it.p))});
+      if(lines.length){L.push("");L.push("*"+(g.short||g.name).toUpperCase()+"*");lines.forEach(function(x){L.push(x)})}
+    });
+    L.push("");L.push("*TOTAL: "+t.u+(t.u===1?" box":" boxes")+"  -  "+money(t.t)+"*");
+    if(info.note){L.push("");L.push("Note: "+info.note)}
     return L.join("\n");
   }
   function openSheet(){sent=false;renderSheet();sheet.classList.add("on");scrim.classList.add("on");sheet.setAttribute("aria-hidden","false");document.body.style.overflow="hidden"}
