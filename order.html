@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>H&amp;K Order Form</title>
+<title>H&amp;K Sales Order Request</title>
 <meta name="description" content="Choose your flavors and quantities and send your order to H&amp;K Distribution.">
 <meta name="theme-color" content="#ffffff">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="H&amp;K Distribution">
-<meta property="og:title" content="H&amp;K Order Form">
+<meta property="og:title" content="H&amp;K Sales Order Request">
 <meta property="og:description" content="Choose your flavors and quantities, then send your order.">
 <meta property="og:image" content="https://khofficer19-a11y.github.io/hk-pricing/og_order.png">
 <meta property="og:image:width" content="1200">
@@ -190,7 +190,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
   function build(){
     
     var n=all().length;
-    var h='<section class="herow"><div class="wrap hero"><div class="eyebrow">Wholesale order form</div><h1>'+esc(CAT.title)+'</h1><div class="orn"><i></i></div><p>Pick your flavors and quantities, then send your order to H&amp;K on WhatsApp. We confirm every order before it ships.</p>'+
+    var h='<section class="herow"><div class="wrap hero"><div class="eyebrow">'+esc(CAT.title)+'</div><h1>Sales Order Request</h1><div class="orn"><i></i></div><p>Pick your flavors and quantities, then send your order to H&amp;K on WhatsApp. We confirm every order before it ships.</p>'+
       '<ol class="steps"><li><i>1</i>Choose</li><li><i>2</i>Review</li><li><i>3</i>Send</li></ol><div class="asof">Availability as of '+esc(CAT.date)+'</div></div></section>';
     h+='<div class="tools" id="tools"><div class="wrap"><div class="search">'+ICON_S+'<input id="q" type="search" inputmode="search" autocomplete="off" placeholder="Search flavor" aria-label="Search flavor"><button id="qx" aria-label="Clear search" hidden>&times;</button></div>'+
       '<div class="tabs" role="group" aria-label="Product type"><button class="tab" data-tab="all" aria-pressed="true">All<small>'+n+'</small></button>';
@@ -246,7 +246,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     ensureRef();var t=totals(),doc=new J({unit:"pt",format:"letter"}),W=612;
     doc.setFillColor(20,18,12);doc.rect(0,0,W,98,"F");doc.setFillColor(184,143,18);doc.rect(0,98,W,3,"F");
     try{var im=document.querySelector(".brand img"),r=(im.naturalWidth||3)/(im.naturalHeight||1),h=34,w=Math.min(110,h*r);doc.setFillColor(255,255,255);doc.roundedRect(40,26,w+16,h+16,6,6,"F");doc.addImage(LOGO,"PNG",48,34,w,h)}catch(e){}
-    doc.setFont("times","bold");doc.setFontSize(28);doc.setTextColor(226,194,90);doc.text("ORDER",W-40,52,{align:"right"});
+    doc.setFont("times","bold");doc.setFontSize(20);doc.setTextColor(226,194,90);doc.text("SALES ORDER REQUEST",W-40,52,{align:"right"});
     doc.setFont("times","normal");doc.setFontSize(10);doc.setTextColor(230,224,200);doc.text("#"+info.ref+"    "+nowStr(),W-40,74,{align:"right"});
     doc.setTextColor(20,18,12);doc.setFont("times","bold");doc.setFontSize(15);doc.text(CAT.title,40,134);
     doc.setFont("helvetica","normal");doc.setFontSize(10.5);doc.setTextColor(60,56,40);
@@ -268,12 +268,12 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     var doc=makePdf();if(!doc){msgSet("Could not make the PDF. Please use Send as text.",true);return}
     var blob=doc.output("blob"),file=new File([blob],pdfName(),{type:"application/pdf"});
     if(navigator.canShare&&navigator.canShare({files:[file]})){
-      navigator.share({files:[file],title:"H&K order "+info.ref,text:msg()}).then(function(){doneSheet("shared")}).catch(function(e){if(e&&e.name==="AbortError")return;doc.save(pdfName());msgSet("PDF saved on your device. Attach it in WhatsApp.")});
+      navigator.share({files:[file],title:"H&K sales order request "+info.ref,text:msg()}).then(function(){doneSheet("shared")}).catch(function(e){if(e&&e.name==="AbortError")return;doc.save(pdfName());msgSet("PDF saved on your device. Attach it in WhatsApp.")});
     }else{doc.save(pdfName());msgSet("PDF saved. Now open WhatsApp and attach it, or use Send as text.");}
   }
   function msg(){
     var t=totals(), L=[];
-    ensureRef();L.push("*NEW ORDER*  |  "+(CAT.brand||CAT.title)+"  |  #"+info.ref);
+    ensureRef();L.push("*SALES ORDER REQUEST*  |  "+(CAT.brand||CAT.title)+"  |  #"+info.ref);
     L.push("*"+(info.name||"-")+"*"+(info.store?"  |  "+info.store:""));
     if(info.phone)L.push("Tel: "+info.phone);
     CAT.groups.forEach(function(g){
