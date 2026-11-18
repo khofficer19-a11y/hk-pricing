@@ -14,6 +14,8 @@
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap">
 <style>
 :root{
@@ -234,9 +236,41 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     if(v)Q[id]=v;else delete Q[id];
     paintRow(id);save();upd();if(sheet.classList.contains("on")&&!keep)renderSheet(true);
   }
+  function ensureRef(){if(!info.ref){var d=new Date(),a="ABCDEFGHJKLMNPQRSTUVWXYZ23456789",r="";for(var i=0;i<4;i++)r+=a.charAt(Math.floor(Math.random()*a.length));info.ref=("0"+(d.getMonth()+1)).slice(-2)+("0"+d.getDate()).slice(-2)+"-"+r;save()}return info.ref}
+  function nowStr(){var d=new Date();return d.toLocaleDateString("en-US")+" "+d.toLocaleTimeString("en-US",{hour:"numeric",minute:"2-digit"})}
+  function makePdf(){
+    var J=window.jspdf&&window.jspdf.jsPDF;if(!J)return null;
+    ensureRef();var t=totals(),doc=new J({unit:"pt",format:"letter"}),W=612;
+    doc.setFillColor(20,18,12);doc.rect(0,0,W,98,"F");doc.setFillColor(184,143,18);doc.rect(0,98,W,3,"F");
+    try{var im=document.querySelector(".brand img"),r=(im.naturalWidth||3)/(im.naturalHeight||1),h=34,w=Math.min(110,h*r);doc.setFillColor(255,255,255);doc.roundedRect(40,26,w+16,h+16,6,6,"F");doc.addImage(LOGO,"PNG",48,34,w,h)}catch(e){}
+    doc.setFont("times","bold");doc.setFontSize(28);doc.setTextColor(226,194,90);doc.text("ORDER",W-40,52,{align:"right"});
+    doc.setFont("times","normal");doc.setFontSize(10);doc.setTextColor(230,224,200);doc.text("#"+info.ref+"    "+nowStr(),W-40,74,{align:"right"});
+    doc.setTextColor(20,18,12);doc.setFont("times","bold");doc.setFontSize(15);doc.text(CAT.title,40,134);
+    doc.setFont("helvetica","normal");doc.setFontSize(10.5);doc.setTextColor(60,56,40);
+    var y=154,rows=[["Name",info.name||"-"],["Store",info.store||"-"]];if(info.phone)rows.push(["Phone",info.phone]);
+    rows.forEach(function(x){doc.setFont("helvetica","bold");doc.text(x[0],40,y);doc.setFont("helvetica","normal");doc.text(String(x[1]),100,y);y+=16});
+    var body=[];
+    CAT.groups.forEach(function(g){var first=true;g.items.forEach(function(it){var q=Q[it.id]||0;if(!q)return;if(first){body.push([{content:g.name,colSpan:4,styles:{fillColor:[246,236,201],fontStyle:"bold",textColor:[20,18,12]}}]);first=false}body.push([it.f,String(q),money(it.p),money(q*it.p)])})});
+    doc.autoTable({startY:y+8,head:[["Flavor","Qty","Price","Total"]],body:body,foot:[[{content:"TOTAL  -  "+t.u+(t.u===1?" box":" boxes"),colSpan:3,styles:{halign:"right"}},money(t.t)]],theme:"grid",
+      styles:{font:"helvetica",fontSize:10,cellPadding:5,lineColor:[221,214,186],lineWidth:.4,textColor:[30,28,18]},
+      headStyles:{fillColor:[20,18,12],textColor:[226,194,90],fontStyle:"bold"},footStyles:{fillColor:[20,18,12],textColor:[226,194,90],fontStyle:"bold",fontSize:11},
+      columnStyles:{0:{cellWidth:"auto"},1:{halign:"center",cellWidth:50},2:{halign:"right",cellWidth:70},3:{halign:"right",cellWidth:80}},margin:{left:40,right:40,bottom:60}});
+    var yy=doc.lastAutoTable.finalY+18;
+    if(info.note){doc.setFont("helvetica","bold");doc.setFontSize(10);doc.setTextColor(60,56,40);doc.text("Note: ",40,yy);doc.setFont("helvetica","normal");doc.text(doc.splitTextToSize(info.note,460),72,yy)}
+    var n=doc.getNumberOfPages();for(var i=1;i<=n;i++){doc.setPage(i);doc.setFont("times","italic");doc.setFontSize(9);doc.setTextColor(110,106,88);doc.text("Prices per box as of "+CAT.date+". Orders are confirmed by H&K before shipping.",40,770);doc.text("Page "+i+" of "+n,W-40,770,{align:"right"})}
+    return doc;
+  }
+  function pdfName(){return "HK-Order-"+ensureRef()+".pdf"}
+  function sendPdf(){
+    var doc=makePdf();if(!doc){msgSet("Could not make the PDF. Please use Send as text.",true);return}
+    var blob=doc.output("blob"),file=new File([blob],pdfName(),{type:"application/pdf"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:"H&K order "+info.ref,text:msg()}).then(function(){doneSheet("shared")}).catch(function(e){if(e&&e.name==="AbortError")return;doc.save(pdfName());msgSet("PDF saved on your device. Attach it in WhatsApp.")});
+    }else{doc.save(pdfName());msgSet("PDF saved. Now open WhatsApp and attach it, or use Send as text.");}
+  }
   function msg(){
     var t=totals(), L=[];
-    L.push("*NEW ORDER*  |  "+(CAT.brand||CAT.title));
+    ensureRef();L.push("*NEW ORDER*  |  "+(CAT.brand||CAT.title)+"  |  #"+info.ref);
     L.push("*"+(info.name||"-")+"*"+(info.store?"  |  "+info.store:""));
     if(info.phone)L.push("Tel: "+info.phone);
     CAT.groups.forEach(function(g){
@@ -259,8 +293,8 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     h+='<div class="sum"><span>Total · '+t.u+(t.u===1?' box':' boxes')+'</span><b>'+money(t.t)+'</b></div></div>';
     h+='<div class="f2"><label class="f">Your name<input id="in_name" autocomplete="name" value="'+esc(info.name)+'" placeholder="Full name"></label><label class="f">Store / company<input id="in_store" autocomplete="organization" value="'+esc(info.store)+'" placeholder="Store or company"></label>'+
        '<label class="f">Phone (optional)<input id="in_phone" type="tel" autocomplete="tel" value="'+esc(info.phone)+'" placeholder="Best number to reach you"></label><label class="f">Note (optional)<input id="in_note" value="'+esc(info.note)+'" placeholder="Delivery or pickup, anything else"></label></div>';
-    h+='<div class="note">Tapping Send opens WhatsApp with your order already written. Press Send there to finish. H&amp;K confirms the order and the final availability.</div></div>';
-    h+='<div class="sh-foot"><div class="msg" id="msg" role="status"></div><button class="btn primary wide" id="send">Send order on WhatsApp</button><button class="btn wide" id="copy">Copy order text instead</button></div>';
+    h+='<div class="note"><b>Send order as PDF</b> makes a neat order sheet; choose H&amp;K in WhatsApp and press Send. <b>Send as WhatsApp message</b> opens our chat with the order typed in. H&amp;K confirms the order and final availability.</div></div>';
+    h+='<div class="sh-foot"><div class="msg" id="msg" role="status"></div><button class="btn primary wide" id="sendpdf">Send order as PDF</button><button class="btn wide" id="send">Send as WhatsApp message</button><button class="btn wide" id="copy">Copy order text</button></div>';
     sheet.innerHTML=h;
     if(!keepFocus){var x=document.getElementById("shx");if(x)x.focus()}
   }
@@ -270,7 +304,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     if(!ok){msgSet("Please type your name and store name.",true);var e=document.getElementById(info.name?"in_store":"in_name");if(e)e.focus()}
     return ok;
   }
-  function doneSheet(){
+  function doneSheet(kind){
     sheet.innerHTML='<div class="sh-head"><h2 id="shtitle">Almost done</h2><button class="x" id="shx" aria-label="Close">&times;</button></div><div class="sh-body"><div class="done"><div class="ck">&#10003;</div><h3>WhatsApp is open</h3><p>Your order is written in the message. Press <b>Send</b> in WhatsApp to finish. If WhatsApp did not open, copy the order and send it to H&amp;K.</p></div></div><div class="sh-foot"><button class="btn primary wide" id="send2">Open WhatsApp again</button><button class="btn wide" id="copy">Copy order text</button><button class="btn wide" id="back">Back to the order</button><div class="msg" id="msg" role="status"></div></div>';
   }
   function wa(){
@@ -291,6 +325,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     if(b.id==="qx"){var q=document.getElementById("q");q.value="";term="";filter();q.focus();return}
     if(b.id==="review"){openSheet();return}
     if(b.id==="shx"||b.id==="back"){if(b.id==="back"){renderSheet();return}closeSheet();return}
+    if(b.id==="sendpdf"){info.name=(document.getElementById("in_name").value||"").trim();info.store=(document.getElementById("in_store").value||"").trim();info.phone=(document.getElementById("in_phone").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return;sendPdf();return}
     if(b.id==="send"||b.id==="send2"){ if(b.id==="send"){info.name=(document.getElementById("in_name").value||"").trim();info.store=(document.getElementById("in_store").value||"").trim();info.phone=(document.getElementById("in_phone").value||"").trim();info.note=(document.getElementById("in_note").value||"").trim();save();if(!need())return} wa();doneSheet();return}
     if(b.id==="copy"){var n=document.getElementById("in_name");if(n){info.name=n.value.trim();info.store=document.getElementById("in_store").value.trim();info.phone=document.getElementById("in_phone").value.trim();info.note=document.getElementById("in_note").value.trim();save();if(!need())return}copy();return}
   });
