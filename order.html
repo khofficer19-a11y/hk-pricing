@@ -9,8 +9,8 @@
 <meta property="og:site_name" content="H&amp;K Distribution">
 <meta property="og:title" content="Sales Order Request H&amp;K">
 <meta property="og:description" content="Choose your flavors and send your order.">
-<meta property="og:url" content="https://khofficer19-a11y.github.io/hk-pricing/order.html">
-<meta property="og:image" content="https://khofficer19-a11y.github.io/hk-pricing/og_order3.png">
+<meta property="og:url" content="https://khofficer19-a11y.github.io/hk-pricing/order/">
+<meta property="og:image" content="https://khofficer19-a11y.github.io/hk-pricing/og_order4.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
@@ -177,7 +177,7 @@ label.f input.err{border-color:var(--bad);box-shadow:0 0 0 3px rgba(179,38,30,.1
     var c=(param("c")||"").replace(/[^a-z0-9\-_]/gi,"");
     if(!c){root.innerHTML='<div class="wrap"><div class="loading">This order link is not complete. Please ask H&amp;K for a new link.</div></div>';return}
     var saved=null;try{saved=JSON.parse(localStorage.getItem(KEY+"-"+c)||"null")}catch(e){}
-    fetch("catalogs/"+c+".json?"+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
+    fetch((location.pathname.indexOf("/order/")>-1?"../catalogs/":"catalogs/")+c+".json?"+Date.now()).then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(j){
       CAT=j;CAT._id=c;
       if(saved){var ok={};all().forEach(function(x){ok[x.it.id]=x.it.s});Object.keys(saved.q||{}).forEach(function(id){if(ok[id])Q[id]=Math.min(ok[id],saved.q[id])});info=Object.assign(info,saved.i||{})}
       build();
